@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emoji Crush 🌟</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0b1e;
+    --panel: #1a1535;
+    --accent1: #ff6fd8;
+    --accent2: #7b61ff;
+    --accent3: #00e5ff;
+    --gold: #ffd600;
+    --green: #00e676;
+    --cell-size: 68px;
+    --gap: 6px;
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    color: #fff;
+  }
+
+  /* Animated background stars */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(123,97,255,0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255,111,216,0.12) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(0,229,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 560px;
+    padding: 20px 20px 0;
+    text-align: center;
+  }
+
+  .game-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.6rem;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 20px rgba(255,111,216,0.5));
+    letter-spacing: 1px;
+  }
+
+  /* ── HUD ── */
+  .hud {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 560px;
+    padding: 14px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .hud-box {
+    background: var(--panel);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 10px 14px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .hud-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.45);
+    font-weight: 700;
+  }
+
+  .hud-value {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    color: var(--gold);
+    line-height: 1.2;
+  }
+
+  .hud-value.blue { color: var(--accent3); }
+  .hud-value.pink { color: var(--accent1); }
+
+  /* ── Level bar ── */
+  .level-bar-wrap {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 560px;
+    padding: 0 20px 10px;
+  }
+
+  .level-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .level-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2.5px solid rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.3);
+    transition: all 0.4s;
+    position: relative;
+  }
+
+  .level-dot.active {
+    border-color: var(--accent1);
+    color: #fff;
+    box-shadow: 0 0 12px var(--accent1);
+    background: rgba(255,111,216,0.2);
+  }
+
+  .level-dot.done {
+    background: var(--green);
+    border-color: var(--green);
+    color: #0d0b1e;
+    box-shadow: 0 0 10px var(--green);
+  }
+
+  .progress-bar-bg {
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent1));
+    transition: width 0.5s ease;
+    box-shadow: 0 0 8px var(--accent1);
+  }
+
+  /* ── Board ── */
+  .board-wrap {
+    position: relative;
+    z-index: 10;
+    padding: 0 20px 10px;
+  }
+
+  #board {
+    display: grid;
+    grid-template-columns: repeat(8, var(--cell-size));
+    gap: var(--gap);
+    padding: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,255,255,0.07);
+    border-radius: 24px;
+    backdrop-filter: blur(8px);
+    box-shadow:
+      0 0 40px rgba(123,97,255,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  .cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    cursor: pointer;
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    transition: transform 0.12s, box-shadow 0.12s, background 0.15s;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cell:hover {
+    transform: scale(1.08);
+    background: rgba(255,255,255,0.1);
+  }
+
+  .cell.selected {
+    background: rgba(255,111,216,0.25);
+    border-color: var(--accent1);
+    box-shadow: 0 0 16px rgba(255,111,216,0.6), inset 0 0 8px rgba(255,111,216,0.2);
+    transform: scale(1.12);
+    animation: pulse-sel 0.8s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse-sel {
+    from { box-shadow: 0 0 12px rgba(255,111,216,0.5); }
+    to   { box-shadow: 0 0 24px rgba(255,111,216,0.9); }
+  }
+
+  .cell.matched {
+    animation: match-pop 0.45s forwards;
+  }
+
+  @keyframes match-pop {
+    0%   { transform: scale(1); opacity: 1; }
+    40%  { transform: scale(1.35); opacity: 0.8; }
+    100% { transform: scale(0); opacity: 0; }
+  }
+
+  .cell.drop {
+    animation: drop-in 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+
+  @keyframes drop-in {
+    from { transform: translateY(-60px) scale(0.7); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .cell.invalid-shake {
+    animation: shake 0.35s;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+  }
+
+  /* ── Particle canvas ── */
+  #particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* ── Score popup ── */
+  .score-pop {
+    position: fixed;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6rem;
+    color: var(--gold);
+    text-shadow: 0 0 10px var(--gold);
+    pointer-events: none;
+    z-index: 20;
+    animation: score-fly 1s ease-out forwards;
+  }
+
+  @keyframes score-fly {
+    0%   { transform: translateY(0) scale(0.8); opacity: 1; }
+    100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+  }
+
+  /* ── Overlay modals ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,11,30,0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--panel);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 28px;
+    padding: 40px 36px;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+    transform: scale(0.85);
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  }
+
+  .overlay.show .modal {
+    transform: scale(1);
+  }
+
+  .modal-emoji {
+    font-size: 4rem;
+    margin-bottom: 12px;
+    display: block;
+    animation: bounce-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes bounce-in {
+    0%  { transform: scale(0); }
+    100%{ transform: scale(1); }
+  }
+
+  .modal h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .modal p {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .modal .stars {
+    font-size: 2rem;
+    letter-spacing: 6px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 14px 36px;
+    border-radius: 50px;
+    border: none;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn:hover { transform: scale(1.06); }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(123,97,255,0.4);
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    margin-top: 10px;
+  }
+
+  /* ── Level goal info ── */
+  .goal-bar {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 560px;
+    padding: 0 20px 12px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .goal-chip {
+    background: var(--panel);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 50px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 700;
+  }
+
+  .goal-chip span { font-size: 1.1rem; }
+  .goal-chip .gval { color: var(--gold); font-family: 'Fredoka One', cursive; font-size: 1rem; }
+
+  /* ── Moves bar ── */
+  .moves-visual {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+
+  .move-pip {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    transition: background 0.3s, transform 0.2s;
+    box-shadow: 0 0 6px var(--accent3);
+  }
+
+  .move-pip.used {
+    background: rgba(255,255,255,0.1);
+    box-shadow: none;
+    transform: scale(0.7);
+  }
+
+  /* Win confetti canvas */
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99;
+    display: none;
+  }
+
+  @media (max-width: 600px) {
+    :root { --cell-size: 40px; --gap: 4px; --radius: 10px; }
+    .cell { font-size: 1.2rem; }
+    .game-title { font-size: 1.8rem; }
+    #board { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+  <div class="game-title">✨ Emoji Crush ✨</div>
+</header>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="hud-box">
+    <div class="hud-label">Score</div>
+    <div class="hud-value" id="score-display">0</div>
+  </div>
+  <div class="hud-box">
+    <div class="hud-label">Level</div>
+    <div class="hud-value blue" id="level-display">1</div>
+  </div>
+  <div class="hud-box">
+    <div class="hud-label">Moves</div>
+    <div class="hud-value pink" id="moves-display">20</div>
+  </div>
+</div>
+
+<!-- Level progress dots -->
+<div class="level-bar-wrap">
+  <div class="level-dots" id="level-dots"></div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- Goal info -->
+<div class="goal-bar" id="goal-bar"></div>
+
+<!-- Board -->
+<div class="board-wrap">
+  <div id="board"></div>
+</div>
+
+<!-- Level Complete Overlay -->
+<div class="overlay" id="win-overlay">
+  <div class="modal">
+    <span class="modal-emoji">🎉</span>
+    <h2 id="win-title">Level Complete!</h2>
+    <span class="stars" id="win-stars">⭐⭐⭐</span>
+    <p id="win-msg">Amazing! You crushed it!</p>
+    <button class="btn btn-primary" onclick="nextLevel()">Next Level →</button>
+    <br>
+    <button class="btn btn-secondary" onclick="retryLevel()">Play Again</button>
+  </div>
+</div>
+
+<!-- Game Over Overlay -->
+<div class="overlay" id="fail-overlay">
+  <div class="modal">
+    <span class="modal-emoji">😢</span>
+    <h2>Out of Moves!</h2>
+    <p id="fail-msg">So close! Give it another shot.</p>
+    <button class="btn btn-primary" onclick="retryLevel()">Try Again 🔄</button>
+  </div>
+</div>
+
+<!-- Game Complete Overlay -->
+<div class="overlay" id="complete-overlay">
+  <div class="modal">
+    <span class="modal-emoji">🏆</span>
+    <h2>You Win!</h2>
+    <p>You crushed all 5 levels!<br>Total Score: <strong id="final-score" style="color:var(--gold)">0</strong></p>
+    <button class="btn btn-primary" onclick="restartGame()">Play Again 🎮</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  GAME CONFIG
+// ═══════════════════════════════════════════════════
+const COLS = 8, ROWS = 8;
+
+const LEVELS = [
+  {
+    id: 1, name: "Starter Garden",
+    emojis: ['🌸','🌟','🍀','🦋','🌈'],
+    moves: 20, target: 1000,
+    special: false
+  },
+  {
+    id: 2, name: "Ocean Vibes",
+    emojis: ['🐠','🐙','🦈','🐚','🦀','🌊'],
+    moves: 22, target: 2000,
+    special: true
+  },
+  {
+    id: 3, name: "Space Candy",
+    emojis: ['🚀','⭐','🌙','👽','🪐','💫','☄️'],
+    moves: 25, target: 3500,
+    special: true
+  },
+  {
+    id: 4, name: "Jungle Fiesta",
+    emojis: ['🦁','🐸','🦜','🐵','🌴','🦋','🍌','🐍'],
+    moves: 28, target: 5000,
+    special: true
+  },
+  {
+    id: 5, name: "Ultimate Crush",
+    emojis: ['🔥','💎','⚡','🌪️','❄️','🎯','💥','🎪','🌟'],
+    moves: 30, target: 7500,
+    special: true
+  }
+];
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let state = {
+  level: 0,
+  score: 0,
+  moves: 0,
+  board: [],
+  selected: null,
+  animating: false
+};
+
+// ═══════════════════════════════════════════════════
+//  BOARD LOGIC
+// ═══════════════════════════════════════════════════
+function randomEmoji(emojis) {
+  return emojis[Math.floor(Math.random() * emojis.length)];
+}
+
+function createBoard(emojis) {
+  let board;
+  do {
+    board = Array.from({ length: ROWS }, () =>
+      Array.from({ length: COLS }, () => ({ emoji: randomEmoji(emojis), special: false }))
+    );
+  } while (!hasAnyMatch(board) === false || findAllMatches(board).length > 6);
+  return board;
+}
+
+function hasAnyMatch(board) {
+  // Check if any moves are possible
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (c < COLS - 1) {
+        swap(board, r, c, r, c + 1);
+        if (findAllMatches(board).length > 0) { swap(board, r, c, r, c + 1); return true; }
+        swap(board, r, c, r, c + 1);
+      }
+      if (r < ROWS - 1) {
+        swap(board, r, c, r + 1, c);
+        if (findAllMatches(board).length > 0) { swap(board, r, c, r + 1, c); return true; }
+        swap(board, r, c, r + 1, c);
+      }
+    }
+  }
+  return false;
+}
+
+function swap(board, r1, c1, r2, c2) {
+  [board[r1][c1], board[r2][c2]] = [board[r2][c2], board[r1][c1]];
+}
+
+function findAllMatches(board) {
+  const matched = new Set();
+  // Horizontal
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS - 2; c++) {
+      const e = board[r][c].emoji;
+      if (e && e === board[r][c+1].emoji && e === board[r][c+2].emoji) {
+        matched.add(`${r},${c}`);
+        matched.add(`${r},${c+1}`);
+        matched.add(`${r},${c+2}`);
+        // extend
+        let k = c + 3;
+        while (k < COLS && board[r][k].emoji === e) { matched.add(`${r},${k}`); k++; }
+      }
+    }
+  }
+  // Vertical
+  for (let c = 0; c < COLS; c++) {
+    for (let r = 0; r < ROWS - 2; r++) {
+      const e = board[r][c].emoji;
+      if (e && e === board[r+1][c].emoji && e === board[r+2][c].emoji) {
+        matched.add(`${r},${c}`);
+        matched.add(`${r+1},${c}`);
+        matched.add(`${r+2},${c}`);
+        let k = r + 3;
+        while (k < ROWS && board[k][c].emoji === e) { matched.add(`${k},${c}`); k++; }
+      }
+    }
+  }
+  return [...matched].map(k => k.split(',').map(Number));
+}
+
+function resolveBoard(emojis) {
+  return new Promise(async (resolve) => {
+    let matched;
+    let totalCleared = 0;
+    while ((matched = findAllMatches(state.board)).length > 0) {
+      totalCleared += matched.length;
+      const pts = matched.length * 50 * (matched.length >= 5 ? 3 : matched.length >= 4 ? 2 : 1);
+      state.score += pts;
+      updateHUD();
+
+      // Animate matched cells
+      matched.forEach(([r, c]) => {
+        const cell = getCellEl(r, c);
+        if (cell) cell.classList.add('matched');
+      });
+
+      await delay(420);
+
+      // Show score popup
+      if (matched.length >= 3) {
+        const firstCell = getCellEl(matched[0][0], matched[0][1]);
+        if (firstCell) showScorePop(firstCell, `+${pts}`);
+      }
+
+      // Spawn particles
+      matched.forEach(([r, c]) => {
+        const cell = getCellEl(r, c);
+        if (cell) {
+          const rect = cell.getBoundingClientRect();
+          spawnParticles(rect.left + rect.width/2, rect.top + rect.height/2, 8);
+        }
+        state.board[r][c] = { emoji: null, special: false };
+      });
+
+      // Drop existing
+      for (let c = 0; c < COLS; c++) {
+        let writeRow = ROWS - 1;
+        for (let r = ROWS - 1; r >= 0; r--) {
+          if (state.board[r][c].emoji !== null) {
+            state.board[writeRow][c] = state.board[r][c];
+            if (writeRow !== r) state.board[r][c] = { emoji: null, special: false };
+            writeRow--;
+          }
+        }
+        // Fill top
+        while (writeRow >= 0) {
+          state.board[writeRow][c] = { emoji: randomEmoji(emojis), special: false };
+          writeRow--;
+        }
+      }
+
+      renderBoard(true);
+      await delay(350);
+    }
+
+    // Check if no moves remain
+    if (!hasAnyMatch(state.board)) {
+      shuffleBoard(emojis);
+      renderBoard(false);
+    }
+
+    resolve(totalCleared);
+  });
+}
+
+function shuffleBoard(emojis) {
+  // Reshuffle until moves are possible
+  let tries = 0;
+  do {
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        state.board[r][c] = { emoji: randomEmoji(emojis), special: false };
+    tries++;
+  } while (!hasAnyMove() && tries < 50);
+}
+
+function hasAnyMove() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (c < COLS - 1) {
+        swap(state.board, r, c, r, c + 1);
+        const m = findAllMatches(state.board).length > 0;
+        swap(state.board, r, c, r, c + 1);
+        if (m) return true;
+      }
+      if (r < ROWS - 1) {
+        swap(state.board, r, c, r + 1, c);
+        const m = findAllMatches(state.board).length > 0;
+        swap(state.board, r + 1, c, r, c);
+        if (m) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDERING
+// ═══════════════════════════════════════════════════
+function renderBoard(withDropAnim = false) {
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      const item = state.board[r][c];
+      cell.textContent = item.emoji || '';
+      if (withDropAnim && item.emoji) {
+        cell.style.animationDelay = `${c * 20}ms`;
+        cell.classList.add('drop');
+      }
+      cell.addEventListener('click', () => onCellClick(r, c));
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+function getCellEl(r, c) {
+  return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+function updateHUD() {
+  document.getElementById('score-display').textContent = state.score.toLocaleString();
+  document.getElementById('level-display').textContent = state.level + 1;
+  document.getElementById('moves-display').textContent = state.moves;
+
+  const lvl = LEVELS[state.level];
+  const pct = Math.min(100, (state.score / lvl.target) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Level dots
+  const dotsEl = document.getElementById('level-dots');
+  dotsEl.innerHTML = '';
+  LEVELS.forEach((l, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'level-dot';
+    if (i < state.level) dot.classList.add('done');
+    else if (i === state.level) dot.classList.add('active');
+    dot.textContent = i < state.level ? '✓' : l.id;
+    dotsEl.appendChild(dot);
+  });
+
+  // Goal
+  renderGoal();
+}
+
+function renderGoal() {
+  const lvl = LEVELS[state.level];
+  const goalBar = document.getElementById('goal-bar');
+  goalBar.innerHTML = `
+    <div class="goal-chip"><span>🎯</span> Target: <span class="gval">${lvl.target.toLocaleString()}</span></div>
+    <div class="goal-chip"><span>📊</span> Score: <span class="gval">${state.score.toLocaleString()}</span></div>
+    <div class="goal-chip"><span>👟</span> Moves: <span class="gval">${state.moves}</span></div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+//  CELL CLICK HANDLER
+// ═══════════════════════════════════════════════════
+async function onCellClick(r, c) {
+  if (state.animating) return;
+  const lvl = LEVELS[state.level];
+
+  if (state.selected === null) {
+    state.selected = [r, c];
+    getCellEl(r, c)?.classList.add('selected');
+    return;
+  }
+
+  const [sr, sc] = state.selected;
+  getCellEl(sr, sc)?.classList.remove('selected');
+
+  if (sr === r && sc === c) {
+    state.selected = null;
+    return;
+  }
+
+  // Must be adjacent
+  const isAdj = (Math.abs(sr - r) + Math.abs(sc - c)) === 1;
+  if (!isAdj) {
+    // Shake both
+    getCellEl(sr, sc)?.classList.add('invalid-shake');
+    getCellEl(r, c)?.classList.add('invalid-shake');
+    setTimeout(() => {
+      getCellEl(sr, sc)?.classList.remove('invalid-shake');
+      getCellEl(r, c)?.classList.remove('invalid-shake');
+    }, 400);
+    state.selected = [r, c];
+    getCellEl(r, c)?.classList.add('selected');
+    return;
+  }
+
+  state.selected = null;
+  state.animating = true;
+
+  // Try swap
+  swap(state.board, sr, sc, r, c);
+  const matches = findAllMatches(state.board);
+
+  if (matches.length === 0) {
+    // Swap back
+    swap(state.board, sr, sc, r, c);
+    const cellA = getCellEl(sr, sc);
+    const cellB = getCellEl(r, c);
+    cellA?.classList.add('invalid-shake');
+    cellB?.classList.add('invalid-shake');
+    setTimeout(() => {
+      cellA?.classList.remove('invalid-shake');
+      cellB?.classList.remove('invalid-shake');
+    }, 400);
+    state.animating = false;
+    return;
+  }
+
+  // Valid move
+  state.moves--;
+  renderBoard(false);
+  await resolveBoard(lvl.emojis);
+
+  state.animating = false;
+  updateHUD();
+
+  // Check win
+  if (state.score >= lvl.target) {
+    await delay(300);
+    showWin();
+    return;
+  }
+
+  // Check fail
+  if (state.moves <= 0) {
+    await delay(300);
+    showFail();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  LEVEL MANAGEMENT
+// ═══════════════════════════════════════════════════
+function startLevel(idx) {
+  state.level = idx;
+  const lvl = LEVELS[idx];
+  state.moves = lvl.moves;
+  state.board = createBoard(lvl.emojis);
+  state.selected = null;
+  state.animating = false;
+  renderBoard(true);
+  updateHUD();
+  hideOverlays();
+}
+
+function showWin() {
+  const lvl = LEVELS[state.level];
+  const extra = state.moves * 30;
+  state.score += extra;
+  const pct = state.score / lvl.target;
+  const stars = pct >= 1.5 ? '⭐⭐⭐' : pct >= 1.2 ? '⭐⭐' : '⭐';
+  document.getElementById('win-title').textContent = `Level ${lvl.id} Complete!`;
+  document.getElementById('win-stars').textContent = stars;
+  document.getElementById('win-msg').textContent = `${lvl.name} conquered! +${extra} bonus points for remaining moves!`;
+  document.getElementById('win-overlay').classList.add('show');
+  startConfetti();
+  updateHUD();
+}
+
+function showFail() {
+  const lvl = LEVELS[state.level];
+  const needed = lvl.target - state.score;
+  document.getElementById('fail-msg').textContent = `You needed ${needed.toLocaleString()} more points. You've got this!`;
+  document.getElementById('fail-overlay').classList.add('show');
+}
+
+function nextLevel() {
+  if (state.level >= LEVELS.length - 1) {
+    hideOverlays();
+    document.getElementById('final-score').textContent = state.score.toLocaleString();
+    document.getElementById('complete-overlay').classList.add('show');
+    return;
+  }
+  state.score = 0; // reset per-level or keep cumulative? Keep cumulative:
+  // Actually keep score across levels for total
+  startLevel(state.level + 1);
+}
+
+function retryLevel() {
+  state.score = 0;
+  startLevel(state.level);
+}
+
+function restartGame() {
+  state.score = 0;
+  startLevel(0);
+}
+
+function hideOverlays() {
+  document.querySelectorAll('.overlay').forEach(o => o.classList.remove('show'));
+  stopConfetti();
+}
+
+// ═══════════════════════════════════════════════════
+//  PARTICLES
+// ═══════════════════════════════════════════════════
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function spawnParticles(x, y, count) {
+  const colors = ['#ff6fd8','#7b61ff','#00e5ff','#ffd600','#00e676','#ff5252'];
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 5;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 3,
+      alpha: 1,
+      radius: 3 + Math.random() * 4,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles = particles.filter(p => p.alpha > 0.02);
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.15;
+    p.alpha *= 0.93;
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ═══════════════════════════════════════════════════
+//  CONFETTI
+// ═══════════════════════════════════════════════════
+const confCanvas = document.getElementById('confetti-canvas');
+const confCtx = confCanvas.getContext('2d');
+let confetti = [], confRunning = false;
+
+function startConfetti() {
+  confCanvas.width = window.innerWidth;
+  confCanvas.height = window.innerHeight;
+  confCanvas.style.display = 'block';
+  confRunning = true;
+  confetti = [];
+  const colors = ['#ff6fd8','#7b61ff','#00e5ff','#ffd600','#00e676'];
+  for (let i = 0; i < 120; i++) {
+    confetti.push({
+      x: Math.random() * confCanvas.width,
+      y: -20 - Math.random() * 200,
+      w: 6 + Math.random() * 10,
+      h: 3 + Math.random() * 5,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      angle: Math.random() * 360,
+      spin: (Math.random() - 0.5) * 8,
+      vx: (Math.random() - 0.5) * 3,
+      vy: 2 + Math.random() * 4,
+      alpha: 1
+    });
+  }
+  runConfetti();
+}
+
+function runConfetti() {
+  if (!confRunning) return;
+  confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  confetti.forEach(c => {
+    c.x += c.vx;
+    c.y += c.vy;
+    c.angle += c.spin;
+    confCtx.save();
+    confCtx.globalAlpha = c.alpha;
+    confCtx.translate(c.x, c.y);
+    confCtx.rotate(c.angle * Math.PI / 180);
+    confCtx.fillStyle = c.color;
+    confCtx.fillRect(-c.w/2, -c.h/2, c.w, c.h);
+    confCtx.restore();
+    if (c.y > confCanvas.height) c.y = -10;
+  });
+  requestAnimationFrame(runConfetti);
+}
+
+function stopConfetti() {
+  confRunning = false;
+  confCanvas.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════
+//  SCORE POPUP
+// ═══════════════════════════════════════════════════
+function showScorePop(el, text) {
+  const rect = el.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'score-pop';
+  pop.textContent = text;
+  pop.style.left = rect.left + rect.width / 2 - 30 + 'px';
+  pop.style.top = rect.top + 'px';
+  document.body.appendChild(pop);
+  pop.addEventListener('animationend', () => pop.remove());
+}
+
+// ═══════════════════════════════════════════════════
+//  UTIL
+// ═══════════════════════════════════════════════════
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+startLevel(0);
+</script>
+</body>
+</html>
